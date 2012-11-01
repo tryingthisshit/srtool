@@ -22,6 +22,24 @@ public class SMTLIBConverter {
 		query = new StringBuilder("(set-logic QF_BV)\n" +
 				"(define-fun tobv32 ((p Bool)) (_ BitVec 32) (ite p (_ bv1 32) (_ bv0 32)))\n");
 		// TODO: Define more functions above (for convenience), as needed.
+		
+		for(String v : variableNames)
+		{
+			query.append("(declare-fun " + v + " () (_ BitVec 32))\n");
+		}
+		
+		for(Expr e : transitionExprs)
+		{
+			query.append("(assert " + exprConverter.visit(e) + ")\n");
+		}
+		
+		String assertion = new String("(assert (not ");
+		String ands = "";
+		for(Expr e : propertyExprs){
+			ands = "(and " + exprConverter.visit(e) + " " + ands + ")";
+		}
+		String res = assertion + ands + "))\n";
+		query.append(res);
 
 		// TODO: Declare variables, add constraints, add properties to check
 		// here.
