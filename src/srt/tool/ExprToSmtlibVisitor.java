@@ -74,13 +74,13 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 
 	@Override
 	public String visit(IntLiteral intLiteral) {
+		/* We need to convert given number to a String Hex representation.
+		 * For example 2 = #x00000002
+		 */
 		String hex = Integer.toHexString(intLiteral.getValue());
-		int padding = 8-hex.length();
-		for(int i = 0; i < padding; i++){
-			hex = "0" + hex;
-		}
-		hex = "#x" + hex;
-		return hex;
+		StringBuilder hexString = new StringBuilder("#x00000000");
+		hexString.replace(hexString.length()-hex.length(), hexString.length(), hex);
+		return hexString.toString();
 	}
 
 	@Override

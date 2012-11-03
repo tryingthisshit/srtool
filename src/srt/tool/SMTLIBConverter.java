@@ -33,13 +33,15 @@ public class SMTLIBConverter {
 			query.append("(assert " + exprConverter.visit(e) + ")\n");
 		}
 		
-		String assertion = new String("(assert (not ");
-		String ands = "";
+		StringBuilder assertion = new StringBuilder("(assert (not\n");
+		StringBuilder ands = new StringBuilder();
 		for(Expr e : propertyExprs){
-			ands = "(and " + exprConverter.visit(e) + " " + ands + ")";
+			ands.insert(0, "  (and " + exprConverter.visit(e) + "\n");
+			ands.append(")");
 		}
-		String res = assertion + ands + "))\n";
-		query.append(res);
+		assertion.append(ands);
+		assertion.append("))\n");
+		query.append(assertion);
 
 		// TODO: Declare variables, add constraints, add properties to check
 		// here.
