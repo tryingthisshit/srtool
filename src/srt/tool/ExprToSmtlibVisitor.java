@@ -47,6 +47,8 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				operator = "(bvmul %s %s)";
 				break;
 			case BinaryExpr.RSHIFT:
+				// Only works for positive numbers.
+				// TODO: Fix it
 				operator = "(bvlshr %s %s)";
 				break;
 			case BinaryExpr.SUBTRACT:
@@ -55,9 +57,9 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				
 			case BinaryExpr.LAND:
 				operator = String.format("(%s (and (%s %%s) (%s %%s)))",
-											Names.toBVectorFunction,
-											Names.toBoolFunction,
-											Names.toBoolFunction);
+						Names.toBVectorFunction,
+						Names.toBoolFunction,
+						Names.toBoolFunction);
 				break;
 			case BinaryExpr.LOR:
 				operator = String.format("(%s (or (%s %%s) (%s %%s)))",
