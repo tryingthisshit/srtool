@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import srt.ast.Expr;
+import srt.util.Names;
 
 public class SMTLIBConverter {
 	
@@ -19,10 +20,10 @@ public class SMTLIBConverter {
 		}
 		
 		exprConverter = new ExprToSmtlibVisitor();
-		query = new StringBuilder("(set-logic QF_BV)\n" +
-				"(define-fun tobv32 ((p Bool)) (_ BitVec 32) (ite p (_ bv1 32) (_ bv0 32)))\n");
-		query.append("(define-fun toBool ((  p (_ BitVec 32)   )) (Bool) (ite (= p #x00000000) false true))\n");
+		query = new StringBuilder("(set-logic QF_BV)\n");
 		// TODO: Define more functions above (for convenience), as needed.
+		query.append(insertMethods());
+		
 		
 		for(String v : variableNames)
 		{
@@ -31,13 +32,13 @@ public class SMTLIBConverter {
 		
 		for(Expr e : transitionExprs)
 		{
-			query.append("(assert " + exprConverter.visit(e) + ")\n");
+			query.append(String.format("(assert (%s %s))\n", Names.toBoolFunction, exprConverter.visit(e)));
 		}
 		
 		StringBuilder assertion = new StringBuilder("(assert (not\n");
 		StringBuilder ands = new StringBuilder();
 		for(Expr e : propertyExprs){
-			ands.insert(0, "  (and " + exprConverter.visit(e) + "\n");
+			ands.insert(0, String.format("  (and (%s %s)\n", Names.toBoolFunction, exprConverter.visit(e)));
 			ands.append(")");
 		}
 		assertion.append(ands);
@@ -60,6 +61,18 @@ public class SMTLIBConverter {
 		List<Integer> res = new ArrayList<Integer>();
 		
 		return res;
+	}
+	
+	private String insertMethods() {
+		StringBuilder builder = new StringBuilder();
+		
+		String toBVec = String.format("(define-fun %s ((p Bool)) (_ BitVec 32) (ite p (_ bv1 32) (_ bv0 32)))\n", Names.toBVectorFunction);
+		builder.append(toBVec);
+		
+		String toBool = String.format("(define-fun %s (( p (_ BitVec 32) )) (Bool) (ite (= p #x00000000) false true))\n", Names.toBoolFunction);
+		builder.append(toBool);
+		
+		return builder.toString();
 	}
 	
 }
