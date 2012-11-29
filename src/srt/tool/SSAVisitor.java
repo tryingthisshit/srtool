@@ -24,7 +24,8 @@ public class SSAVisitor extends DefaultVisitor {
 	}
 	
 	private void incrementSSAIndex(String name) {
-		index.put(name, index.get(name)+1);
+		int currentIndex = index.containsKey(name) ? index.get(name) : 0;
+		index.put(name, currentIndex+1);
 	}
 	
 	@Override

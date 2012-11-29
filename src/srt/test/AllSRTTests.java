@@ -23,6 +23,7 @@ public class AllSRTTests {
 		
 		// bounded model checker tests
 		tests.addTest(getTestsInDir("test/1_simple", clargs));
+		tests.addTest(getTestsInDir("test/SSA", clargs));
 		
 		// unwinding-assertions=false tests
 		// (comment out these lines while testing loop free programs)

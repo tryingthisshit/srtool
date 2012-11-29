@@ -29,7 +29,9 @@ public class SMTLIBConverter {
 		{
 			query.append("(declare-fun " + v + " () (_ BitVec 32))\n");
 		}
-		
+		query.append("(assert (= $P0$0 #x00000001))\n");
+		query.append("(assert (= $G$0 #x00000001))\n");
+
 		for(Expr e : transitionExprs)
 		{
 			query.append(String.format("(assert (%s %s))\n", Names.toBoolFunction, exprConverter.visit(e)));
@@ -69,7 +71,7 @@ public class SMTLIBConverter {
 		String toBVec = String.format("(define-fun %s ((p Bool)) (_ BitVec 32) (ite p (_ bv1 32) (_ bv0 32)))\n", Names.toBVectorFunction);
 		builder.append(toBVec);
 		
-		String toBool = String.format("(define-fun %s (( p (_ BitVec 32) )) (Bool) (ite (= p #x00000000) false true))\n", Names.toBoolFunction);
+		String toBool = String.format("(define-fun %s (( p (_ BitVec 32) )) (Bool) (not (= p #x00000000)))\n", Names.toBoolFunction);
 		builder.append(toBool);
 		
 		return builder.toString();

@@ -74,13 +74,13 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				operator = String.format("( %s (bvsle %%s %%s))", Names.toBVectorFunction);
 				break;
 			case BinaryExpr.LT:
-				operator = String.format("( %s (bvslt %%s %%s))", Names.toBVectorFunction);
+				operator = String.format("(%s (bvslt %%s %%s))", Names.toBVectorFunction);
 				break;
 			case BinaryExpr.NEQUAL:
-				operator = String.format("( %s  (not (= %%s %%s)))", Names.toBVectorFunction);
+				operator = String.format("(%s  (not (= %%s %%s)))", Names.toBVectorFunction);
 				break;
 			case BinaryExpr.EQUAL:
-				operator = String.format("( %s (= %%s %%s))", Names.toBVectorFunction);
+				operator = String.format("(%s (= %%s %%s))", Names.toBVectorFunction);
 				break;
 			default:
 				throw new IllegalArgumentException("Invalid binary operator");
@@ -108,7 +108,10 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 
 	@Override
 	public String visit(TernaryExpr ternaryExpr) {
-		return null;
+		return String.format("(ite (toBool %s) %s %s)",
+				visit(ternaryExpr.getCondition()),
+				visit(ternaryExpr.getTrueExpr()),
+				visit(ternaryExpr.getFalseExpr()));
 	}
 
 	@Override
