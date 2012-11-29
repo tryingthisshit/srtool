@@ -33,9 +33,7 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				operator = "(bvxor %s %s)";
 				break;
 			case BinaryExpr.DIVIDE:
-				// Only works for positive numbers.
-				// TODO: Find out if this is the right behaviour
-				operator = "(bvudiv %s %s)";
+				operator = "(bvsdiv %s %s)";
 				break;
 			case BinaryExpr.LSHIFT:
 				operator = "(bvshl %s %s)";
@@ -47,9 +45,7 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				operator = "(bvmul %s %s)";
 				break;
 			case BinaryExpr.RSHIFT:
-				// Only works for positive numbers.
-				// TODO: Fix it
-				operator = "(bvlshr %s %s)";
+				operator = "(bvashr %s %s)";
 				break;
 			case BinaryExpr.SUBTRACT:
 				operator = "(bvsub %s %s)";
