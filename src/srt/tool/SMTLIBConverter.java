@@ -21,6 +21,7 @@ public class SMTLIBConverter {
 		exprConverter = new ExprToSmtlibVisitor();
 		query = new StringBuilder("(set-logic QF_BV)\n" +
 				"(define-fun tobv32 ((p Bool)) (_ BitVec 32) (ite p (_ bv1 32) (_ bv0 32)))\n");
+		query.append("(define-fun toBool ((  p (_ BitVec 32)   )) (Bool) (ite (= p #x00000000) false true))\n");
 		// TODO: Define more functions above (for convenience), as needed.
 		
 		for(String v : variableNames)
