@@ -22,28 +22,19 @@ public class AllSRTTests {
 		CLArgs clargs = new CLArgs();
 		
 		// bounded model checker tests
-		tests.addTest(getTestsInDir("test/1_simple", clargs));
-		tests.addTest(getTestsInDir("test/SSA", clargs));
-		tests.addTest(getTestsInDir("test/predication", clargs));
-		tests.addTest(getTestsInDir("test/otherops", clargs));
-		tests.addTest(getTestsInDir("test/binops", clargs));
-		tests.addTest(getTestsInDir("test/unaryops", clargs));
-		tests.addTest(getTestsInDir("test/stupidif", clargs));
-		tests.addTest(getTestsInDir("test/asserts", clargs));
+		tests.addTest(getTestsInDir("test", clargs));
 
-		
-		
 		// unwinding-assertions=false tests
 		// (comment out these lines while testing loop free programs)
-//		clargs = new CLArgs();
-//		clargs.unwindingAssertions = false;
-//		tests.addTest(getTestsInDir("testunsound", clargs));
+		clargs = new CLArgs();
+		clargs.unwindingAssertions = false;
+		tests.addTest(getTestsInDir("testunsound", clargs));
 //		
 		// loop abstraction tests
 		// (comment out these lines while testing the bounded model checker)
-//		clargs = new CLArgs();
-//		clargs.abstractLoops = true;
-//		tests.addTest(getTestsInDir("testloopabs", clargs));
+		clargs = new CLArgs();
+		clargs.abstractLoops = true;
+		tests.addTest(getTestsInDir("testloopabs", clargs));
 
 		return tests;
 	}

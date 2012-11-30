@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.tree.Tree;
-
 import srt.ast.Program;
 import srt.ast.visitor.impl.Checker;
 import srt.ast.visitor.impl.MakeBlockVisitor;

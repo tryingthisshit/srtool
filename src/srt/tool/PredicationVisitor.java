@@ -8,7 +8,6 @@ import srt.ast.AssignStmt;
 import srt.ast.AssumeStmt;
 import srt.ast.BinaryExpr;
 import srt.ast.BlockStmt;
-import srt.ast.Decl;
 import srt.ast.DeclRef;
 import srt.ast.Expr;
 import srt.ast.HavocStmt;
