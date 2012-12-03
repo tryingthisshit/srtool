@@ -2,9 +2,13 @@ package srt.tool;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.antlr.runtime.RecognitionException;
+
+import srt.ast.AssertStmt;
+import srt.ast.Node;
 import srt.ast.Program;
 import srt.ast.visitor.impl.Checker;
 import srt.ast.visitor.impl.MakeBlockVisitor;
@@ -89,12 +93,16 @@ public class SRTool {
 		if (queryResult.startsWith("sat")) {
 			List<Integer> indexesFailed = converter
 					.getPropertiesThatFailed(queryResult);
-
-			// TODO: Use "indexesFailed" after implementing
-			// "getPropertiesThatFailed".
-			// For now:
-
-			result.add(new AssertionFailure(null));
+			
+			// Create list of only the assert statements
+			List<AssertStmt> failedAsserts = new LinkedList<AssertStmt>();
+			for(Node n : ccv.propertyNodes){
+				if(n instanceof AssertStmt) failedAsserts.add((AssertStmt)n);
+			}
+			
+			for (int i : indexesFailed) {
+				result.add(new AssertionFailure(failedAsserts.get(i).getTokenInfo()));
+			}
 
 		} else if (!queryResult.startsWith("unsat")) {
 			throw new UnknownResultException();

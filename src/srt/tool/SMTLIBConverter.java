@@ -3,8 +3,11 @@ package srt.tool;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import srt.ast.Expr;
+import srt.util.AssertionUtil;
 import srt.util.Names;
 
 public class SMTLIBConverter {
@@ -35,21 +38,12 @@ public class SMTLIBConverter {
 			query.append(String.format("(assert (%s %s))\n", Names.toBoolFunction, exprConverter.visit(e)));
 		}
 		
-		StringBuilder assertion = new StringBuilder("(assert (not\n");
-		StringBuilder ands = new StringBuilder();
-		for(Expr e : propertyExprs){
-			ands.insert(0, String.format("  (and (%s %s)\n", Names.toBoolFunction, exprConverter.visit(e)));
-			ands.append(")");
-		}
-		assertion.append(ands);
-		assertion.append("))\n");
-		query.append(assertion);
-
-		// TODO: Declare variables, add constraints, add properties to check
-		// here.
-
+		AssertionUtil assertionUtil = new AssertionUtil(propertyExprs, exprConverter);
+		
+		query.append(assertionUtil.getAssertionsAndProperties());
 		
 		query.append("(check-sat)\n");
+		query.append(assertionUtil.getGetValue());
 		
 	}
 
@@ -59,7 +53,10 @@ public class SMTLIBConverter {
 	
 	public List<Integer> getPropertiesThatFailed(String queryResult) {
 		List<Integer> res = new ArrayList<Integer>();
-		
+		Matcher m = Pattern.compile("(\\d+) false").matcher(queryResult);
+		while (m.find()) {
+			res.add(Integer.parseInt(m.group(1)));
+		}
 		return res;
 	}
 	

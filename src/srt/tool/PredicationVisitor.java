@@ -87,7 +87,7 @@ public class PredicationVisitor extends DefaultVisitor {
 		Expr implication = new TernaryExpr(condition,
 				assertStmt.getCondition(),
 				new IntLiteral(1));
-		AssertStmt nAssert = new AssertStmt(implication);
+		AssertStmt nAssert = new AssertStmt(implication, assertStmt);
 		return super.visit(nAssert);
 	}
 
