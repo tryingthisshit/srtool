@@ -6,19 +6,16 @@ import java.util.Set;
 
 import srt.ast.AssertStmt;
 import srt.ast.AssumeStmt;
-import srt.ast.BinaryExpr;
 import srt.ast.BlockStmt;
 import srt.ast.DeclRef;
 import srt.ast.EmptyStmt;
 import srt.ast.Expr;
-import srt.ast.ExprList;
 import srt.ast.HavocStmt;
 import srt.ast.IfStmt;
 import srt.ast.IntLiteral;
 import srt.ast.Stmt;
 import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.DefaultVisitor;
-import srt.parser.SimpleCParser.assumeStmt_return;
 import srt.util.InvUtil;
 
 public class LoopAbstractionVisitor extends DefaultVisitor {

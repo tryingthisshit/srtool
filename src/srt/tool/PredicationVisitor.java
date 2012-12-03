@@ -13,6 +13,7 @@ import srt.ast.Expr;
 import srt.ast.HavocStmt;
 import srt.ast.IfStmt;
 import srt.ast.IntLiteral;
+import srt.ast.Program;
 import srt.ast.Stmt;
 import srt.ast.TernaryExpr;
 import srt.ast.UnaryExpr;
@@ -31,18 +32,20 @@ public class PredicationVisitor extends DefaultVisitor {
 		currentBasePredicate = getFreshBasePredicate();
 	}
 	
-	/*This is to add the base predicate to the whole program and set it to true
+	/*This is to add the base predicate to the whole program and set it to true*/
 	@Override
 	public Object visit(Program program) {
-		List<Stmt> newStatementList = new LinkedList<Stmt>(program.getBlockStmt().getStmtList().getStatements());
+		String startingPredicate = currentBasePredicate;
+		Program visitedProgram = (Program) super.visit(program);
 		
-		newStatementList.add(0, new Decl(getPredicate(), "int"));
-		newStatementList.add(1, new AssignStmt(new DeclRef(getPredicate()), new IntLiteral(1)));
+		List<Stmt> newStatementList = new LinkedList<Stmt>(visitedProgram.getBlockStmt().getStmtList().getStatements());
+		
+		newStatementList.add(0, new AssignStmt(new DeclRef(startingPredicate), new IntLiteral(1)));
+		newStatementList.add(1, new AssignStmt(new DeclRef(assumePredicate), new IntLiteral(1)));
 		
 		BlockStmt newBlock = new BlockStmt(newStatementList);
-		Program newProgram = new Program(program.getFunctionName(), program.getDeclList(), newBlock, program);
-		return super.visit(newProgram);	
-	}*/
+		return new Program(visitedProgram.getFunctionName(), visitedProgram.getDeclList(), newBlock, visitedProgram);
+	}
 	
 	@Override
 	public Object visit(IfStmt ifStmt) {

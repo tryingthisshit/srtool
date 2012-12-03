@@ -29,8 +29,6 @@ public class SMTLIBConverter {
 		{
 			query.append("(declare-fun " + v + " () (_ BitVec 32))\n");
 		}
-		query.append("(assert (= $P0$0 #x00000001))\n");
-		query.append("(assert (= $G$0 #x00000001))\n");
 
 		for(Expr e : transitionExprs)
 		{
