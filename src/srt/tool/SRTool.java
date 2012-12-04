@@ -52,7 +52,6 @@ public class SRTool {
 			throw new CheckerExpception(checker.getCheckerError());
 		}
 
-		// TODO: Transform program using Visitors here.
 		if (clArgs.abstractLoops) {
 			p = (Program) new LoopAbstractionVisitor().visit(p);
 		} else {

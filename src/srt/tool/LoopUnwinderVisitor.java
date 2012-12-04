@@ -26,49 +26,84 @@ public class LoopUnwinderVisitor extends DefaultVisitor {
 		this.defaultUnwindBound = defaultUnwindBound;
 	}
 
+	/*
+	 * Applies the loop unwinding transformation
+	 * 
+	 * S
+	 * while(C)
+	 * invariant X
+	 * bound N
+	 * {
+	 * 	B;
+	 * }
+	 * T;
+	 * 
+	 * transforms to
+	 * 
+	 * S;
+	 * assert(X);
+	 * if (C) {
+	 * 	B;
+	 *  assert(X);
+	 *  if (C) {
+	 *  	B;
+	 *  	.
+	 *  	. If happens N times in total
+	 *  	.
+	 *  	assert(X)
+	 *  	if (C) {
+	 *  		B;
+	 *  		assert(!C) - only included if we want to maintain soundness
+	 *  		assume(!C);
+	 *  	}
+	 *  }
+	 * }
+	 * 
+	 */
 	@Override
 	public Object visit(WhileStmt whileStmt) {
-		int bound = whileStmt.getBound() != null ? whileStmt.getBound().getValue() : defaultUnwindBound; 
-		
-		AssertStmt invariantAssertion = new AssertStmt(InvUtil.getInvariantExpr(whileStmt));
-		
-		Stmt assumeStmt = new AssumeStmt(new UnaryExpr(UnaryExpr.LNOT, whileStmt.getCondition()));
-		Stmt assertStmt = new AssertStmt(new UnaryExpr(UnaryExpr.LNOT, whileStmt.getCondition()));
-		
 		List<Stmt> stmtList = new LinkedList<Stmt>();
-		stmtList.add(invariantAssertion);
 		
-		if (unwindingAssertions) { 
+		Stmt invariantAssertions = InvUtil.getInvariantAssertions(whileStmt);
+		stmtList.add(invariantAssertions);
+		
+		if (unwindingAssertions) {
+			//This will be an assertion that fails if we go out of bounds while unwinding the loop
+			//We base it on the whileStmt so it reports the error at that point.
+			Stmt assertStmt = new AssertStmt(new UnaryExpr(UnaryExpr.LNOT, whileStmt.getCondition()), whileStmt);
 			stmtList.add(assertStmt);
 		}
+		
+		
+		Stmt assumeStmt = new AssumeStmt(new UnaryExpr(UnaryExpr.LNOT, whileStmt.getCondition()));
 		stmtList.add(assumeStmt);
 		
 		Stmt mainStatement = new BlockStmt(stmtList);
 		
+		int bound = whileStmt.getBound() != null ? whileStmt.getBound().getValue() : defaultUnwindBound; 
 		while(bound > 0){
-			IfStmt ifStatement = getIfStatement(whileStmt, mainStatement);
-			List<Stmt> finalList = new LinkedList<Stmt>();
-			finalList.add(invariantAssertion);
-			finalList.add(ifStatement);
-			mainStatement = new BlockStmt(finalList);
+			Stmt ifStatement = createIfStatement(whileStmt, mainStatement);
+			List<Stmt> wrapList = new LinkedList<Stmt>();
+			wrapList.add(invariantAssertions);
+			wrapList.add(ifStatement);
+			mainStatement = new BlockStmt(wrapList);
 			bound--;
 		}
 		
 		return super.visit(mainStatement);
 	}
 	
-	private IfStmt getIfStatement(WhileStmt whileStmt, Stmt baseStmt){
+	private Stmt createIfStatement(WhileStmt whileStmt, Stmt baseStmt){
 		
 		List<Stmt> joinedList = new LinkedList<Stmt>();
 		
 		joinedList.add(whileStmt.getBody());
 		joinedList.add(baseStmt);
-		BlockStmt chained = new BlockStmt(joinedList);
+		Stmt chained = new BlockStmt(joinedList);
 		
-		IfStmt ifStatement = new IfStmt(whileStmt.getCondition(), chained, new EmptyStmt());
+		Stmt ifStatement = new IfStmt(whileStmt.getCondition(), chained, new EmptyStmt());
 		
 		return ifStatement;
-		
 	}
 
 }

@@ -4,12 +4,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import srt.ast.AssertStmt;
 import srt.ast.AssumeStmt;
 import srt.ast.BlockStmt;
 import srt.ast.DeclRef;
 import srt.ast.EmptyStmt;
-import srt.ast.Expr;
 import srt.ast.HavocStmt;
 import srt.ast.IfStmt;
 import srt.ast.IntLiteral;
@@ -29,8 +27,9 @@ public class LoopAbstractionVisitor extends DefaultVisitor {
 	 * Applies the loop abstraction transformation
 	 * 
 	 * S
+	 * while(C)
 	 * invariant X
-	 * while(C){
+	 * {
 	 * 	B;
 	 * }
 	 * T;
@@ -50,24 +49,26 @@ public class LoopAbstractionVisitor extends DefaultVisitor {
 	 */
 	@Override
 	public Object visit(WhileStmt whileStmt) {
-		List<Stmt> stmtList = new LinkedList<Stmt>();
-		Expr invariantExpr = InvUtil.getInvariantExpr(whileStmt);
-		Stmt invariantAssert = new AssertStmt(invariantExpr);
-		Stmt invariantAssume = new AssumeStmt(invariantExpr);
+		Stmt invariantAsserts = InvUtil.getInvariantAssertions(whileStmt);
 		
+		//Assume doesn't need to be based on specific nodes.
+		//Hence we just have one assume statement.
+		Stmt invariantAssume = InvUtil.getInvariantAssume(whileStmt);
+
 		Set<String> modset = getModset(whileStmt.getBody());
 		Stmt havocs = getHavocs(modset);
 		
-		stmtList.add(invariantAssert);
-		stmtList.add(havocs);
-		stmtList.add(invariantAssume);
-		
 		List<Stmt> modifiedBodyList = new LinkedList<Stmt>();
 		modifiedBodyList.add(whileStmt.getBody());
-		modifiedBodyList.add(invariantAssert);
+		modifiedBodyList.add(invariantAsserts);
 		modifiedBodyList.add(new AssumeStmt(new IntLiteral(0)));
 		Stmt modifiedBody = new BlockStmt(modifiedBodyList);
-		Stmt ifstmt = new IfStmt(whileStmt.getCondition(), modifiedBody, new EmptyStmt());
+		Stmt ifstmt = new IfStmt(whileStmt.getCondition(), modifiedBody, new EmptyStmt(), whileStmt);
+		
+		List<Stmt> stmtList = new LinkedList<Stmt>();
+		stmtList.add(invariantAsserts);
+		stmtList.add(havocs);
+		stmtList.add(invariantAssume);
 		stmtList.add(ifstmt);
 		
 		BlockStmt block = new BlockStmt(stmtList);
@@ -84,8 +85,7 @@ public class LoopAbstractionVisitor extends DefaultVisitor {
 		List<Stmt> stmtList = new LinkedList<Stmt>();
 		for (String varName : variableNames) {
 			stmtList.add(new HavocStmt(new DeclRef(varName)));
-		}
-		
+		} 
 		return new BlockStmt(stmtList);
 	}
 }

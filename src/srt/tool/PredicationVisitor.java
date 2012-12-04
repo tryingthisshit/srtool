@@ -32,14 +32,13 @@ public class PredicationVisitor extends DefaultVisitor {
 		currentBasePredicate = getFreshBasePredicate();
 	}
 	
-	/*This is to add the base predicate to the whole program and set it to true*/
+	/*This is to add the base predicates to the whole program and set them to true*/
 	@Override
 	public Object visit(Program program) {
 		String startingPredicate = currentBasePredicate;
+		
 		Program visitedProgram = (Program) super.visit(program);
-		
 		List<Stmt> newStatementList = new LinkedList<Stmt>(visitedProgram.getBlockStmt().getStmtList().getStatements());
-		
 		newStatementList.add(0, new AssignStmt(new DeclRef(startingPredicate), new IntLiteral(1)));
 		newStatementList.add(1, new AssignStmt(new DeclRef(assumePredicate), new IntLiteral(1)));
 		
@@ -47,13 +46,31 @@ public class PredicationVisitor extends DefaultVisitor {
 		return new Program(visitedProgram.getFunctionName(), visitedProgram.getDeclList(), newBlock, visitedProgram);
 	}
 	
+	
+	/*
+	 * Transforms
+	 * 
+	 * if(E) { 
+	 *	S 
+	 * } else { 
+	 *	T 
+	 * }
+	 * 
+	 * to
+	 * Q = P && E;
+     * R = P && !E;
+	 * Pred(S, Q);
+	 * Pred(T, R);
+	 * 
+	 * where Q and R are fresh predicate names
+	 */
 	@Override
 	public Object visit(IfStmt ifStmt) {
 		DeclRef currentPredicate = new DeclRef(currentBasePredicate);
-
-		String oldBasePredicate = currentBasePredicate;
 		
+		String oldBasePredicate = currentBasePredicate;
 		currentBasePredicate = getFreshBasePredicate();
+		
 		DeclRef ifPredicate = new DeclRef(currentBasePredicate);
 		Expr ifPredicateAssignment = new BinaryExpr(BinaryExpr.LAND, currentPredicate, ifStmt.getCondition());
 		Stmt ifPredicateStatement = new AssignStmt(ifPredicate, ifPredicateAssignment);
@@ -79,9 +96,16 @@ public class PredicationVisitor extends DefaultVisitor {
 		return block;
 	}
 
+	/*
+	 * Transforms
+	 * assert(E)
+	 * to
+	 * assert((G && P) => E)
+	 * where G is the global assume predicate and P the current "if" predicate
+	 */
 	@Override
 	public Object visit(AssertStmt assertStmt) {
-		BinaryExpr condition = new BinaryExpr(BinaryExpr.LAND,
+		Expr condition = new BinaryExpr(BinaryExpr.LAND,
 				new DeclRef(assumePredicate),
 				new DeclRef(currentBasePredicate));
 		Expr implication = new TernaryExpr(condition,
@@ -91,27 +115,48 @@ public class PredicationVisitor extends DefaultVisitor {
 		return super.visit(nAssert);
 	}
 
+	/*
+	 * Transforms
+	 * x = E;
+	 * to
+	 * x = ((G && P) ? E : x)
+	 * where G is the global assume predicate and P the current "if" predicate
+	 */
 	@Override
 	public Object visit(AssignStmt assignment) {
-		BinaryExpr condition = new BinaryExpr(BinaryExpr.LAND,
+		Expr condition = new BinaryExpr(BinaryExpr.LAND,
 				new DeclRef(assumePredicate),
 				new DeclRef(currentBasePredicate));
 		Expr rhs = new TernaryExpr(condition, assignment.getRhs(), assignment.getLhs());
-		AssignStmt nAssignment = new AssignStmt(assignment.getLhs(), rhs);
+		AssignStmt nAssignment = new AssignStmt(assignment.getLhs(), rhs, assignment);
 		return super.visit(nAssignment);
 	}
 
+	/*
+	 * Transforms
+	 * assume(E);
+	 * to
+	 * G = G && ((G && P) => E)
+	 * where G is the global assume predicate and P the current "if" predicate
+	 */
 	@Override
 	public Object visit(AssumeStmt assumeStmt) {
-		BinaryExpr condition = new BinaryExpr(BinaryExpr.LAND,
+		Expr condition = new BinaryExpr(BinaryExpr.LAND,
 				new DeclRef(assumePredicate),
 				new DeclRef(currentBasePredicate));
-		TernaryExpr gImpl = new TernaryExpr(condition, assumeStmt.getCondition(), new IntLiteral(1));
-		BinaryExpr gAnd = new BinaryExpr(BinaryExpr.LAND, new DeclRef(assumePredicate), gImpl);
+		Expr gImpl = new TernaryExpr(condition, assumeStmt.getCondition(), new IntLiteral(1));
+		Expr gAnd = new BinaryExpr(BinaryExpr.LAND, new DeclRef(assumePredicate), gImpl);
 		AssignStmt newAssumeAssignment = new AssignStmt(new DeclRef(assumePredicate), gAnd, assumeStmt);
 		return super.visit(newAssumeAssignment);
 	}
 
+	/*
+	 * Transforms
+	 * havoc(x);
+	 * to
+	 * x = (G && P) ? h : x
+	 * where G is the global assume predicate, P the current "if" predicate, and "h" a fresh predicate
+	 */
 	@Override
 	public Object visit(HavocStmt havocStmt) {
 		BinaryExpr condition = new BinaryExpr(BinaryExpr.LAND,
